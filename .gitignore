@@ -1,0 +1,23 @@
+# Environment
+.env
+.env.example
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Claude / agents
+.claude/
+.agents/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
