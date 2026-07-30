@@ -1,0 +1,140 @@
+Enum "academic"."exam_status" {
+    "draft"
+    "published"
+    "closed"
+}
+
+Enum "academic"."attempt_status" {
+    "in_progress"
+    "submitted"
+    "graded"
+}
+
+Enum "academic"."question_type" {
+    "single_choice"
+    "open_ended"
+}
+
+Enum "core"."user_status" {
+    "active"
+    "inactive"
+    "blocked"
+    "pending_verification"
+}
+
+Table "academic"."question" {
+  "id" bigint [pk, not null, increment]
+  "exam_id" bigint [not null, ref: > "academic"."exam"."id"]
+  "statement" text [not null]
+  "type" question_type
+  "score" numeric(6,2)
+  "order" smallint
+
+  Indexes {
+    (exam_id, order) [unique, name: "uq_question_order"]
+  }
+}
+
+Table "academic"."exam" {
+  "id" bigint [pk, not null, increment]
+  "teacher_id" bigint [not null, ref: > "core"."user"."id"]
+  "title" varchar(200) [not null]
+  "description" text
+  "duration_minutes" smallint
+  "status" exam_status
+  "created_at" timestamptz
+}
+
+Table "academic"."evidence" {
+  "id" bigint [pk, not null, increment]
+  "attempt_id" bigint [not null, ref: > "academic"."exam_attempt"."id"]
+  "question_id" bigint [ref: > "academic"."question"."id"]
+  "type" varchar(30) [not null, note: 'CAMERA, SCREENSHOT, AUDIO']
+  "reason" varchar(50) [note: 'PERIODIC, TAB_CHANGE, FULLSCREEN_EXIT, CAMERA_BLOCKED, etc.']
+  "file_url" varchar(500) [not null]
+  "captured_at" timestamptz [not null]
+  "created_at" timestamptz
+}
+
+Table "academic"."exam_attempt" {
+  "id" bigint [pk, not null, increment]
+  "exam_id" bigint [not null, ref: > "academic"."exam"."id"]
+  "student_id" bigint [not null, ref: > "core"."user"."id"]
+  "status" attempt_status
+  "started_at" timestamptz
+  "submitted_at" timestamptz
+  "score_obtained" numeric(6,2)
+}
+
+Table "academic"."Document" {
+  "id" bigint [pk, not null]
+  "name" varchar(100)
+}
+
+Table "academic"."attempt_answer" {
+  "id" bigint [pk, not null, increment]
+  "attempt_id" bigint [not null, ref: > "academic"."exam_attempt"."id"]
+  "question_id" bigint [not null, ref: > "academic"."question"."id"]
+  "option_id" bigint [ref: > "academic"."answer_option"."id"]
+  "answer_text" text
+  "score_obtained" numeric(6,2)
+
+  Indexes {
+    (attempt_id, question_id) [unique, name: "uq_answer"]
+  }
+}
+
+Table "academic"."answer_option" {
+  "id" bigint [pk, not null, increment]
+  "question_id" bigint [not null, ref: > "academic"."question"."id"]
+  "text" text [not null]
+  "is_correct" boolean
+  "order" smallint
+
+  Indexes {
+    (question_id, order) [unique, name: "uq_option_order"]
+  }
+}
+
+Table "core"."user_role" {
+  "user_id" bigint [not null, ref: > "core"."user"."id"]
+  "role_id" smallint [not null, ref: > "core"."role"."id"]
+
+  Indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table "core"."user" {
+  "id" bigint [pk, not null, increment]
+  "person_id" bigint [unique, not null, ref: > "core"."person"."id"]
+  "email" varchar(255) [unique, not null]
+  "password_hash" varchar(255) [not null]
+  "institutional_code" varchar(30)
+  "status" user_status
+  "registration_date" timestamptz
+}
+
+Table "core"."role" {
+  "id" smallint [pk, not null, increment]
+  "code" varchar(30) [unique]
+  "name" varchar(80)
+}
+
+Table "core"."person" {
+  "id" bigint [pk, not null, increment]
+  "first_names" varchar(120) [not null]
+  "paternal_surname" varchar(80) [not null]
+  "maternal_surname" varchar(80)
+  "document_type_id" bigint [not null, ref: > "academic"."Document"."id"]
+  "document_number" varchar(20) [not null]
+  "birth_date" date
+  "sex" "char(1)"
+  "phone" varchar(20)
+  "created_at" timestamptz
+  "updated_at" timestamptz
+
+  Indexes {
+    (document_type_id, document_number) [unique, name: "uq_person_document"]
+  }
+}
