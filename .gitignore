@@ -4,6 +4,9 @@
 .venv/
 venv/
 
+# Database design
+db.dbml
+
 # Python
 __pycache__/
 *.py[cod]
