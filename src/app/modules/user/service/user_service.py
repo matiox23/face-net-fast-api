@@ -96,6 +96,10 @@ class UserService:
         await self.session.commit()
         return await self._to_response(user)
 
+    async def ensure_exists(self, user_id: int) -> None:
+        """Raise UserNotFoundError if no user has this id. For callers that only need existence."""
+        await self._get_user_or_raise(user_id)
+
     async def get_user_by_email_for_auth(self, email: str) -> User | None:
         """Return the raw ORM user (with password_hash) for auth_service only."""
         return await self.repository.get_by_email(email)
