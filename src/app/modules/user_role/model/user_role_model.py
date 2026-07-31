@@ -10,5 +10,9 @@ class UserRole(Base):
     __tablename__ = "user_role"
     __table_args__ = {"schema": "core"}
 
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("core.user.id"), primary_key=True)
-    role_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("core.role.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("core.user.id"), primary_key=True
+    )
+    role_id: Mapped[int] = mapped_column(
+        SmallInteger, ForeignKey("core.role.id"), primary_key=True
+    )
