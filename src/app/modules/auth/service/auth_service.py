@@ -3,10 +3,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.app.common.security.jwt import create_access_token
 from src.app.common.security.password_hasher import verify_password
 from src.app.common.setting import base_config
-from src.app.modules.auth.dto.auth_dto import LoginRequest, LogoutRequest, RefreshRequest, TokenResponse
+from src.app.modules.auth.dto.auth_dto import (
+    LoginRequest,
+    LogoutRequest,
+    RefreshRequest,
+    TokenResponse,
+)
 from src.app.modules.auth.service.auth_exceptions import InvalidCredentialsError
-from src.app.modules.refresh_token.service.refresh_token_exceptions import InvalidRefreshTokenError
-from src.app.modules.refresh_token.service.refresh_token_service import RefreshTokenService
+from src.app.modules.refresh_token.service.refresh_token_exceptions import (
+    InvalidRefreshTokenError,
+)
+from src.app.modules.refresh_token.service.refresh_token_service import (
+    RefreshTokenService,
+)
 from src.app.modules.user.model.user_model import UserStatus
 from src.app.modules.user.service.user_service import UserService
 from src.app.modules.user_role.service.user_role_service import UserRoleService
@@ -43,7 +52,9 @@ class AuthService:
 
     async def refresh(self, data: RefreshRequest) -> TokenResponse:
         try:
-            token_row = await self.refresh_token_service.validate_and_get(data.refresh_token)
+            token_row = await self.refresh_token_service.validate_and_get(
+                data.refresh_token
+            )
             new_refresh_token = await self.refresh_token_service.rotate(token_row)
         except InvalidRefreshTokenError:
             await self.session.rollback()
@@ -61,7 +72,9 @@ class AuthService:
 
     async def logout(self, data: LogoutRequest) -> None:
         try:
-            token_row = await self.refresh_token_service.validate_and_get(data.refresh_token)
+            token_row = await self.refresh_token_service.validate_and_get(
+                data.refresh_token
+            )
         except InvalidRefreshTokenError:
             await self.session.rollback()
             return

@@ -5,7 +5,12 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.app.common.database.dependencies.get_async_session import AsyncSessionDep
-from src.app.common.security.jwt import ExpiredTokenError, InvalidTokenError, TokenType, decode_token
+from src.app.common.security.jwt import (
+    ExpiredTokenError,
+    InvalidTokenError,
+    TokenType,
+    decode_token,
+)
 from src.app.modules.user.model.user_model import User, UserStatus
 from src.app.modules.user.service.user_service import UserService
 
@@ -30,7 +35,9 @@ async def get_current_user(
     try:
         payload = decode_token(credentials.credentials, TokenType.ACCESS)
     except (ExpiredTokenError, InvalidTokenError) as exc:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token") from exc
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, "Invalid or expired token"
+        ) from exc
 
     user = await UserService(session).get_user_by_id_for_auth(int(payload["sub"]))
     if user is None:
