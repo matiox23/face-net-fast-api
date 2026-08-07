@@ -12,6 +12,7 @@ class ExamStatus(str, enum.Enum):
     DRAFT = "draft"
     PUBLISHED = "published"
     CLOSED = "closed"
+    DELETED = "deleted"
 
 
 class Exam(Base):

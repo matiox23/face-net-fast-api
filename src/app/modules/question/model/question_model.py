@@ -1,7 +1,16 @@
 import enum
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, Numeric, SmallInteger, Text, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Enum,
+    ForeignKey,
+    Numeric,
+    SmallInteger,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.app.common.model.base_model import Base
@@ -32,3 +41,4 @@ class Question(Base):
     )
     score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2), nullable=True)
     order: Mapped[int | None] = mapped_column("order", SmallInteger, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

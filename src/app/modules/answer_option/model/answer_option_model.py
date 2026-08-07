@@ -27,3 +27,4 @@ class AnswerOption(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     is_correct: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     order: Mapped[int | None] = mapped_column("order", SmallInteger, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
