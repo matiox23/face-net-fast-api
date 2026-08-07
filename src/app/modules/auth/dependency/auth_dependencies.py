@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Annotated, Callable
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import OAuth2PasswordBearer
 
 from src.app.common.database.dependencies.get_async_session import AsyncSessionDep
 from src.app.common.security.jwt import (
@@ -14,7 +14,7 @@ from src.app.common.security.jwt import (
 from src.app.modules.user.model.user_model import User, UserStatus
 from src.app.modules.user.service.user_service import UserService
 
-bearer_scheme = HTTPBearer(auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 
 
 @dataclass
@@ -27,13 +27,13 @@ class AuthenticatedUser:
 
 async def get_current_user(
     session: AsyncSessionDep,
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    token: Annotated[str | None, Depends(oauth2_scheme)],
 ) -> AuthenticatedUser:
-    if credentials is None:
+    if token is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
 
     try:
-        payload = decode_token(credentials.credentials, TokenType.ACCESS)
+        payload = decode_token(token, TokenType.ACCESS)
     except (ExpiredTokenError, InvalidTokenError) as exc:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED, "Invalid or expired token"

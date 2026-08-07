@@ -4,7 +4,6 @@ from src.app.common.security.jwt import create_access_token
 from src.app.common.security.password_hasher import verify_password
 from src.app.common.setting import base_config
 from src.app.modules.auth.dto.auth_dto import (
-    LoginRequest,
     LogoutRequest,
     RefreshRequest,
     TokenResponse,
@@ -32,11 +31,11 @@ class AuthService:
         self.user_role_service = UserRoleService(session)
         self.refresh_token_service = RefreshTokenService(session)
 
-    async def login(self, data: LoginRequest) -> TokenResponse:
-        user = await self.user_service.get_user_by_email_for_auth(data.email)
+    async def login(self, email: str, password: str) -> TokenResponse:
+        user = await self.user_service.get_user_by_email_for_auth(email)
         if user is None or user.status in (UserStatus.BLOCKED, UserStatus.INACTIVE):
             raise InvalidCredentialsError("Invalid email or password")
-        if not verify_password(data.password, user.password_hash):
+        if not verify_password(password, user.password_hash):
             raise InvalidCredentialsError("Invalid email or password")
 
         roles = await self.user_role_service.list_role_codes(user.id)

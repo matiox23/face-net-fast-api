@@ -3,8 +3,14 @@ from fastapi import FastAPI
 from src.app.modules.answer_option.controller.answer_option_controller import (
     router as answer_option_router,
 )
+from src.app.modules.attempt_answer.controller.attempt_answer_controller import (
+    router as attempt_answer_router,
+)
 from src.app.modules.auth.controller.auth_controller import router as auth_router
 from src.app.modules.exam.controller.exam_controller import router as exam_router
+from src.app.modules.exam_attempt.controller.exam_attempt_controller import (
+    router as exam_attempt_router,
+)
 from src.app.modules.question.controller.question_controller import router as question_router
 from src.app.modules.user.controller.user_controller import router as user_router
 from src.app.modules.user_role.controller.user_role_controller import router as user_role_router
@@ -17,3 +23,5 @@ app.include_router(user_role_router)
 app.include_router(exam_router)
 app.include_router(question_router)
 app.include_router(answer_option_router)
+app.include_router(exam_attempt_router)
+app.include_router(attempt_answer_router)
