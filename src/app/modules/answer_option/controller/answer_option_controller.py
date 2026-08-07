@@ -9,6 +9,7 @@ from src.app.modules.answer_option.dto.answer_option_dto import (
 )
 from src.app.modules.answer_option.service.answer_option_exceptions import (
     AnswerOptionNotFoundError,
+    AnswerOptionOrderConflictError,
 )
 from src.app.modules.answer_option.service.answer_option_service import AnswerOptionService
 from src.app.modules.auth.dependency.auth_dependencies import CurrentUserDep
@@ -60,7 +61,10 @@ async def create_option(
     current: CurrentUserDep,
 ) -> AnswerOptionResponse:
     await _ensure_question_owner_or_admin(exam_id, question_id, session, current)
-    return await AnswerOptionService(session).create_option(question_id, data)
+    try:
+        return await AnswerOptionService(session).create_option(question_id, data)
+    except AnswerOptionOrderConflictError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
 
 @router.get("")
@@ -95,7 +99,10 @@ async def update_option(
 ) -> AnswerOptionResponse:
     await _ensure_question_owner_or_admin(exam_id, question_id, session, current)
     await _ensure_option_in_question(question_id, option_id, session)
-    return await AnswerOptionService(session).update_option(option_id, data)
+    try:
+        return await AnswerOptionService(session).update_option(option_id, data)
+    except AnswerOptionOrderConflictError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
 
 @router.delete("/{option_id}", status_code=status.HTTP_204_NO_CONTENT)

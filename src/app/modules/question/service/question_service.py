@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.modules.question.dto.question_dto import (
@@ -8,7 +9,10 @@ from src.app.modules.question.dto.question_dto import (
 )
 from src.app.modules.question.model.question_model import Question
 from src.app.modules.question.repository.question_repository import QuestionRepository
-from src.app.modules.question.service.question_exceptions import QuestionNotFoundError
+from src.app.modules.question.service.question_exceptions import (
+    QuestionNotFoundError,
+    QuestionOrderConflictError,
+)
 
 
 class QuestionService:
@@ -19,14 +23,20 @@ class QuestionService:
         self.repository = QuestionRepository(session)
 
     async def create_question(self, exam_id: int, data: QuestionCreate) -> QuestionResponse:
-        question = await self.repository.create(
-            exam_id=exam_id,
-            statement=data.statement,
-            type=data.type,
-            score=data.score,
-            order=data.order,
-        )
-        await self.session.commit()
+        try:
+            question = await self.repository.create(
+                exam_id=exam_id,
+                statement=data.statement,
+                type=data.type,
+                score=data.score,
+                order=data.order,
+            )
+            await self.session.commit()
+        except IntegrityError as exc:
+            await self.session.rollback()
+            raise QuestionOrderConflictError(
+                f"Question order {data.order} is already used in this exam"
+            ) from exc
         return QuestionResponse.model_validate(question)
 
     async def get_question(self, question_id: int) -> QuestionResponse:
@@ -44,15 +54,21 @@ class QuestionService:
 
     async def update_question(self, question_id: int, data: QuestionUpdate) -> QuestionResponse:
         question = await self._get_question_or_raise(question_id)
-        question = await self.repository.update(
-            question,
-            statement=data.statement,
-            type=data.type,
-            score=data.score,
-            order=data.order,
-            fields_set=data.model_fields_set,
-        )
-        await self.session.commit()
+        try:
+            question = await self.repository.update(
+                question,
+                statement=data.statement,
+                type=data.type,
+                score=data.score,
+                order=data.order,
+                fields_set=data.model_fields_set,
+            )
+            await self.session.commit()
+        except IntegrityError as exc:
+            await self.session.rollback()
+            raise QuestionOrderConflictError(
+                f"Question order {data.order} is already used in this exam"
+            ) from exc
         return QuestionResponse.model_validate(question)
 
     async def delete_question(self, question_id: int) -> None:

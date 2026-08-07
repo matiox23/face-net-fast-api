@@ -12,7 +12,10 @@ from src.app.modules.question.dto.question_dto import (
     QuestionUpdate,
 )
 from src.app.modules.question.model.question_model import Question
-from src.app.modules.question.service.question_exceptions import QuestionNotFoundError
+from src.app.modules.question.service.question_exceptions import (
+    QuestionNotFoundError,
+    QuestionOrderConflictError,
+)
 from src.app.modules.question.service.question_service import QuestionService
 
 router = APIRouter(prefix="/exams/{exam_id}/questions", tags=["questions"])
@@ -47,7 +50,10 @@ async def create_question(
     exam_id: int, data: QuestionCreate, session: AsyncSessionDep, current: CurrentUserDep
 ) -> QuestionResponse:
     await _ensure_exam_owner_or_admin(exam_id, session, current)
-    return await QuestionService(session).create_question(exam_id, data)
+    try:
+        return await QuestionService(session).create_question(exam_id, data)
+    except QuestionOrderConflictError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
 
 @router.get("")
@@ -77,7 +83,10 @@ async def update_question(
 ) -> QuestionResponse:
     await _ensure_exam_owner_or_admin(exam_id, session, current)
     await _ensure_question_in_exam(exam_id, question_id, session)
-    return await QuestionService(session).update_question(question_id, data)
+    try:
+        return await QuestionService(session).update_question(question_id, data)
+    except QuestionOrderConflictError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
 
 @router.delete("/{question_id}", status_code=status.HTTP_204_NO_CONTENT)

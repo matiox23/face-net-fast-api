@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.modules.answer_option.dto.answer_option_dto import (
@@ -12,6 +13,7 @@ from src.app.modules.answer_option.repository.answer_option_repository import (
 )
 from src.app.modules.answer_option.service.answer_option_exceptions import (
     AnswerOptionNotFoundError,
+    AnswerOptionOrderConflictError,
 )
 
 
@@ -25,13 +27,19 @@ class AnswerOptionService:
     async def create_option(
         self, question_id: int, data: AnswerOptionCreate
     ) -> AnswerOptionResponse:
-        option = await self.repository.create(
-            question_id=question_id,
-            text=data.text,
-            is_correct=data.is_correct,
-            order=data.order,
-        )
-        await self.session.commit()
+        try:
+            option = await self.repository.create(
+                question_id=question_id,
+                text=data.text,
+                is_correct=data.is_correct,
+                order=data.order,
+            )
+            await self.session.commit()
+        except IntegrityError as exc:
+            await self.session.rollback()
+            raise AnswerOptionOrderConflictError(
+                f"Option order {data.order} is already used in this question"
+            ) from exc
         return AnswerOptionResponse.model_validate(option)
 
     async def get_option(self, option_id: int) -> AnswerOptionResponse:
@@ -51,14 +59,20 @@ class AnswerOptionService:
         self, option_id: int, data: AnswerOptionUpdate
     ) -> AnswerOptionResponse:
         option = await self._get_option_or_raise(option_id)
-        option = await self.repository.update(
-            option,
-            text=data.text,
-            is_correct=data.is_correct,
-            order=data.order,
-            fields_set=data.model_fields_set,
-        )
-        await self.session.commit()
+        try:
+            option = await self.repository.update(
+                option,
+                text=data.text,
+                is_correct=data.is_correct,
+                order=data.order,
+                fields_set=data.model_fields_set,
+            )
+            await self.session.commit()
+        except IntegrityError as exc:
+            await self.session.rollback()
+            raise AnswerOptionOrderConflictError(
+                f"Option order {data.order} is already used in this question"
+            ) from exc
         return AnswerOptionResponse.model_validate(option)
 
     async def delete_option(self, option_id: int) -> None:
