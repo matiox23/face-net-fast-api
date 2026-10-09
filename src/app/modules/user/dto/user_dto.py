@@ -7,18 +7,18 @@ from src.app.modules.user.model.user_model import UserStatus
 
 
 class UserCreate(BaseModel):
-    first_names: str = Field(max_length=120)
-    paternal_surname: str = Field(max_length=80)
-    maternal_surname: str | None = Field(default=None, max_length=80)
-    document_type_id: int
-    document_number: str = Field(max_length=20)
-    birth_date: date | None = None
-    sex: str | None = Field(default=None, max_length=1)
-    phone: str | None = Field(default=None, max_length=20)
+    first_names: str = Field(max_length=120, examples=["Juan Carlos"])
+    paternal_surname: str = Field(max_length=80, examples=["Pérez"])
+    maternal_surname: str | None = Field(default=None, max_length=80, examples=["Gómez"])
+    document_type_id: int = Field(examples=[1])
+    document_number: str = Field(max_length=20, examples=["12345678"])
+    birth_date: date | None = Field(default=None, examples=["2000-05-14"])
+    sex: str | None = Field(default=None, max_length=1, examples=["M"])
+    phone: str | None = Field(default=None, max_length=20, examples=["+56912345678"])
 
-    email: EmailStr
-    password: str = Field(min_length=8, max_length=128)
-    institutional_code: str | None = Field(default=None, max_length=30)
+    email: EmailStr = Field(examples=["juan.perez@example.com"])
+    password: str = Field(min_length=8, max_length=128, examples=["SuperSecret123"])
+    institutional_code: str | None = Field(default=None, max_length=30, examples=["EST-2024-001"])
 
 
 class UserUpdate(BaseModel):
